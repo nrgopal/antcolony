@@ -4,9 +4,9 @@ import math
 import random
 import numpy as np
 
-# Number of paramaters
-NTHREAD  = 16
-NCACHE1  = 65
+# dimension of each paramater
+NTHREAD  = 1
+NCACHE1  = 32
 NCACHE2  = 12
 NCACHE3  = 30
 
@@ -28,11 +28,12 @@ NANTS = 5
 # Keep track of solutions computed to avoid recomputation of cost
 solutions = np.zeros((NTHREAD,NCACHE1,NCACHE2,NCACHE3), dtype=float)
 
-# True optimal cost = (1*1) + (16*16) + (16*16) + (16*16) = 769 
+# True optimal cost for sphere function i.e.
+# (1*1) + (16*16) + (16*16) + (16*16) = 769 
 OPTIMAL_COST = 769
 
 # number of iterations
-MAXITERS = 25
+MAXITERS = 20
 
 # evaporation rate
 EVAP_RATE = 0.1
@@ -69,7 +70,7 @@ probabilities_cache2 = np.zeros(NCACHE2, dtype=float)
 probabilities_cache3 = np.zeros(NCACHE3, dtype=float)
 
 # cost function array for each ant
-costs = np.zeros(NANTS, dtype=int)
+costs = np.zeros(NANTS, dtype=float)
 
 # tracking exploration of ants & info on best ant & convergence
 # the selected indices of parameters 
@@ -83,7 +84,101 @@ num_calls = 0
 # Other constants
 INFINITY = 1000000000
 
-# The objective cost function: sphere function
+# parses throughput from iso3dfd output
+def get_throughput(output):
+    throughput = 0.0
+    result = ""
+   
+    try:
+        lines = output.read().split("\n")
+        for line in lines:
+            if line.__contains__("throughput"):  
+                result = line
+    finally:
+        output.close();
+
+    if result is None:
+        throughput = -1;
+    else:
+        for t in result.split():
+            try:
+                throughput = float(t)
+            except ValueError:
+                pass
+                
+    return throughput
+
+# parses time from iso3dfd output
+def get_time(output):
+    time = 100.0
+    result = ""
+   
+    try:
+        lines = output.read().split("\n")
+        for line in lines:
+            if line.__contains__("time"):  
+                result = line
+    finally:
+        output.close();
+
+    if result is None:
+        time = -1;
+    else:
+        for t in result.split():
+            try:
+                time = float(t)
+            except ValueError:
+                pass
+                
+    return time
+
+# calls iso3dfd with throughput retrieval
+def iso3dfd_throughput(threads, cache1):
+    # size of the problem in three dimensions
+    n1 = "256"
+    n2 = "256"
+    n3 = "256"
+
+    # number of threads
+    num_threads = str(threads)
+    
+    # number of iterations
+    nreps = "100"
+
+    # cache blocking for each dimension
+    n1_thrd_block = str(cache1)
+    n2_thrd_block = "12"
+    n3_thrd_block = "30"
+
+    output = os.popen("bin/iso3dfd_dev13_cpu_avx.exe " + n1 + " " + n2 + " " + n3 + " " + num_threads + " " + nreps + " " + n1_thrd_block + " " + n2_thrd_block + " " + n3_thrd_block)
+
+    output = -1.0*float(get_throughput(output))
+    return output
+
+# calls iso3dfd with time retrieval
+def iso3dfd_time(threads, cache1, cache2, cache3):
+    # size of the problem in three dimensions
+    n1 = "256"
+    n2 = "256"
+    n3 = "256"
+
+    # number of threads
+    num_threads = str(threads)
+    
+    # number of iterations
+    nreps = "50"
+
+    # cache blocking for each dimension
+    n1_thrd_block = str(cache1)
+    n2_thrd_block = str(cache2)
+    n3_thrd_block = str(cache3)
+
+    output = os.popen("bin/iso3dfd_dev13_cpu_avx.exe " + n1 + " " + n2 + " " + n3 + " " + num_threads + " " + nreps + " " + n1_thrd_block + " " + n2_thrd_block + " " + n3_thrd_block)
+
+    output = float(get_time(output))
+    return output
+
+# The objective cost function: iso3dfd with output time
 def cost(threadid, cache1id, cache2id, cache3id):
 
     global num_calls
@@ -95,7 +190,7 @@ def cost(threadid, cache1id, cache2id, cache3id):
         cache1value = cache1[cache1id]
         cache2value = cache2[cache2id]
         cache3value = cache3[cache3id] 
-        result = threadvalue**2 +  cache1value**2 + cache2value**2 + cache3value**2
+        result = iso3dfd_time(threadvalue, cache1value, cache2value, cache3value)
         solutions[threadid, cache1id, cache2id, cache3id] = result
         num_calls += 1
         return(result)
@@ -107,7 +202,7 @@ def initialize():
     print("")
     
     for i in range(NTHREAD):
-        thread[i] = i+1
+        thread[i] = 16
     print("Thread values: ")
     print(thread)
     print("")
@@ -120,13 +215,13 @@ def initialize():
     print("")
 
     for i in range(NCACHE2):
-        cache2[i] = 16*(i+1)
+        cache2[i] = i+1
     print("Cache2 values: ")
     print(cache2)
     print("")
 
     for i in range(NCACHE3):
-        cache3[i] = 16*(i+1)
+        cache3[i] = i+1
     print("Cache3 values: ")
     print(cache3)
     print("")
@@ -139,8 +234,8 @@ def initialize():
     print(EVAP_RATE)
     print("")
 
-    print("Objective cost function is the sphere function i.e.")
-    print("thread*thread + cache1*cache1 + cache2*cache2 + *cache3*cache3")
+    print("Objective cost function is iso3dfd with output time")
+    print("")
     print("")
 
     for i in range(NTHREAD):
@@ -565,7 +660,11 @@ if __name__ == "__main__":
                         min_cache1 = j
                         min_cache2 = k
                         min_cache3 = l
-    print("Minimun cost found: " + str(min_cost))
+    print("")
+    print("")
+    print("-----------------------------------------------------")
+    print("")
+    print("Minimum cost found: " + str(min_cost))
     print("Number of calls to function: " + str(num_calls))
     print("Number of iterations: " + str(iters))
     print("Best parameters found")
@@ -573,3 +672,4 @@ if __name__ == "__main__":
     print("   cache1[" + str(min_cache1) + "]: " + str(cache1[min_cache1]))
     print("   cache2[" + str(min_cache2) + "]: " + str(cache2[min_cache2]))
     print("   cache3[" + str(min_cache3) + "]: " + str(cache3[min_cache3]))
+    print(" ")
