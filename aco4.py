@@ -5,8 +5,8 @@ import random
 import numpy as np
 
 # Number of paramaters
-NTHREAD  = 16
-NCACHE1  = 64
+NTHREAD  = 1
+NCACHE1  = 54
 NCACHE2  = 12
 NCACHE3  = 30
 
@@ -192,13 +192,13 @@ def initialize():
     print("")
     
     for i in range(NTHREAD):
-        thread[i] = i+1
+        thread[i] = 16
     print("Thread values: ")
     print(thread)
     print("")
     
     for i in range(NCACHE1):
-        cache1[i] = 16*(i+1)
+        cache1[i] = (16*(i+1))+160
     
     print("Cache1 values: ")
     print(cache1)
@@ -224,8 +224,7 @@ def initialize():
     print(EVAP_RATE)
     print("")
 
-    print("Objective cost function is the sphere function i.e.")
-    print("thread*thread + cache1*cache1 + cache2*cache2 + *cache3*cache3")
+    print("Objective cost function is iso3dfd with output time")
     print("")
 
     for i in range(NTHREAD):
@@ -656,3 +655,4 @@ if __name__ == "__main__":
     print("   cache1[" + str(min_cache1) + "]: " + str(cache1[min_cache1]))
     print("   cache2[" + str(min_cache2) + "]: " + str(cache2[min_cache2]))
     print("   cache3[" + str(min_cache3) + "]: " + str(cache3[min_cache3]))
+    print(" ")
