@@ -1,7 +1,6 @@
 PARAMETER-TUNING FOR EFFICIENT PROGRAM EXECUTION THROUGH ANT COLONY OPTIMIZATION
 
 Abstract:
-
 As high-performance hardware architectures grow in power and complexity, especially in
 parallel processing platforms, choosing optimal parameters for efficient program execution can
 be a challenge. There are many tunable factors that affect the speed of execution of a program
