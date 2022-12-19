@@ -1,7 +1,8 @@
-PARAMETER-TUNING FOR EFFICIENT PROGRAM EXECUTION THROUGH ANT COLONY OPTIMIZATION
+**PARAMETER-TUNING FOR EFFICIENT PROGRAM EXECUTION THROUGH ANT COLONY OPTIMIZATION**
 
-Abstract:
-As high-performance hardware architectures grow in power and complexity, especially in
+Ant colony algorithm to optimize compiler and run-time parameters in parallel computing (Python)
+
+*As high-performance hardware architectures grow in power and complexity, especially in
 parallel processing platforms, choosing optimal parameters for efficient program execution can
 be a challenge. There are many tunable factors that affect the speed of execution of a program
 and how much power the execution consumes: compiler options, compiler flags, cache block
@@ -15,4 +16,4 @@ solutions and penalize poor ones in the search process. We show how the performa
 ACO varies with different settings of the algorithm and search strategies. We obtain significant
 improvement when the ACO is extended to update a varying number of neighboring paths, like in
 simulated annealing. We also compare our results to other approaches, including baseline
-performances based on other algorithms and also one based on Particle Swarm Optimization.
+performances based on other algorithms and also one based on Particle Swarm Optimization.*
